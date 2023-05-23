@@ -24,7 +24,7 @@ func Login(username, password string) (*Session, error) {
 	req.Header.Add("X-Api-Key",        "FCX2QsbxHjSP52B")
 	req.Header.Add("X-PRIME-SYNC",     "0")
 	req.Header.Add("X-Unity-Version",  "2020.3.18f1-digit-multiple-fixes-build")
-	resp, err := client.PostForm("", url.Values{
+	req.Form = url.Values{
 		"auth_provider":   {""},
 		"auth_token":      {""},
 		"ad_hoc_username": {username},
@@ -33,7 +33,8 @@ func Login(username, password string) (*Session, error) {
 		"password":        {""},
 		"channel":         {"digit_WindowsPlayer"},
 		"partner_id":      {"8abbfd6b-90c5-44bd-9d90-28d72cb203ff"},
-	})
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
