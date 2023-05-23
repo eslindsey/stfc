@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/url"
 )
 
 func init() {
@@ -15,7 +16,6 @@ type Session struct {
 
 func Login(username, password string) (*Session, error) {
 	client := &http.Client{}
-	_, err := client.Post("https://cdn-nv3-live.startrek.digitgaming.com/accounts/v1/accounts/login/windows")
 	req, err := http.NewRequest("POST", "https://cdn-nv3-live.startrek.digitgaming.com/accounts/v1/accounts/login/windows", nil)
 	req.Header.Add("User-Agent",       "UnityPlayer/2020.3.18f1-digit-multiple-fixes-build (UnityWebRequest/1.0, libcurl/7.75.0-DEV)")
 	req.Header.Add("X-TRANSACTION-ID", "ca98560c-e47c-4af5-b859-e35764181733")   // TODO: Randomize
@@ -47,6 +47,6 @@ func Login(username, password string) (*Session, error) {
 	if err != nil {
 		return nil, err
 	}
-	return ret, nil
+	return &ret, nil
 }
 
