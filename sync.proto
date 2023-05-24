@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package stfc;
+
+option go_package="github.com/eslindsey/stfc";
+
+message Sync {
+	message Payload {
+		//uint32 unknown1 = 1;
+		string json = 2;
+	}
+	Payload payload = 1;
+	//repeated Unknown1 unknown1 = 2;
+	//Unknown2 unknown2 = 3;
+	string account_id = 4;
+	string version = 5;
+}
+
