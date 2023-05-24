@@ -40,10 +40,10 @@ func testLogin(t *testing.T) {
 }
 
 func testSync2(t *testing.T) {
-	body, err := s.Sync(2)
+	sync, err := s.Sync(2)
 	if err != nil {
 		t.Fatalf("Sync2 failed: %s", err)
 	}
-	t.Logf("Sync2 succeeded: %v", string(body))
+	t.Logf("Sync2 succeeded: user ID %v has %d types of resources", sync.Starbase.UserID, len(sync.Resources))
 }
 

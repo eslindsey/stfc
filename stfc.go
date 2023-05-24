@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"google.golang.org/protobuf/proto"
 )
 
 type Header struct {Key, Value string}
@@ -119,7 +121,19 @@ func (s *Session) Post(endpoint string, headers []Header, body io.Reader) ([]byt
 	return respBody, nil
 }
 
-func (s *Session) Sync(n int) ([]byte, error) {
-	return s.Post("/sync", []Header{{"X-Prime-Sync", fmt.Sprintf("%d", n)}}, nil)
+func (s *Session) Sync(n int) (*SyncJSON, error) {
+	body, err := s.Post("/sync", []Header{{"X-Prime-Sync", fmt.Sprintf("%d", n)}}, nil)
+	if err != nil {
+		return nil, err
+	}
+	var sync Sync
+	if err := proto.Unmarshal(body, &sync); err != nil {
+		return nil, err
+	}
+	var syncJson SyncJSON
+	if err := json.Unmarshal([]byte(sync.Payload.Json), &syncJson); err != nil {
+		return nil, err
+	}
+	return &syncJson, nil
 }
 
