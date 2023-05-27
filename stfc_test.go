@@ -2,14 +2,16 @@ package stfc
 
 import (
 	"io/ioutil"
+	"log"
 	"testing"
 
 	"github.com/go-yaml/yaml"
 )
 
 var secrets struct {
-	AdhocUsername string `yaml:"adhoc_username"`
-	AdhocPassword string `yaml:"adhoc_password"`
+	AdhocUsername   string   `yaml:"adhoc_username"`
+	AdhocPassword   string   `yaml:"adhoc_password"`
+	ProfilesUserIDs []string `yaml:"profiles_user_ids"`
 }
 
 var (
@@ -25,8 +27,10 @@ func TestAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Couldn't unmarshal secrets: %s", err)
 	}
-	t.Run("Login", testLogin)
-	t.Run("Sync2", testSync2)
+	//log.Printf("Using secrets: %+v", secrets)
+	t.Run("Login",    testLogin)
+	t.Run("Sync2",    testSync2)
+	t.Run("Profiles", testProfiles)
 }
 
 func testLogin(t *testing.T) {
@@ -45,5 +49,13 @@ func testSync2(t *testing.T) {
 		t.Fatalf("Sync2 failed: %s", err)
 	}
 	t.Logf("Sync2 succeeded: user ID %v has %d types of resources", sync.Starbase.UserID, len(sync.Resources))
+}
+
+func testProfiles(t *testing.T) {
+	profiles, err := s.Profiles(secrets.ProfilesUserIDs)
+	if err != nil {
+		t.Fatalf("Profiles failed: %s", err)
+	}
+	t.Logf("Profiles succeeded: %v", profiles)
 }
 

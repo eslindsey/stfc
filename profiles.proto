@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package stfc;
+
+option go_package = "github.com/eslindsey/stfc";
+
+message Profiles {
+	message Payload {
+		message Payload2 {
+			message Profile {
+				string account_id = 1;
+				string name = 2;
+				fixed32 unknown1 = 3;   // appears to be ops level, matches unknown2 every time so far
+				fixed32 unknown2 = 4;   // see above
+				//uint32 unknown3 = 5;
+				//uint64 unknown4 = 6;
+				uint64 power = 8;
+				message ProfileUnknown {
+					uint32 unknown1 = 1;
+					uint64 unknown2 = 2;
+				}
+				repeated ProfileUnknown unknown5 = 10;
+				//uint32 unknown6 = 11;
+			}
+			repeated Profile profile = 1;
+		}
+		Payload2 payload2 = 2;
+	}
+	Payload payload = 1;
+	string version = 5;
+}
+

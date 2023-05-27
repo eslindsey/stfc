@@ -1,10 +1,12 @@
 package stfc
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -97,7 +99,7 @@ func (s *Session) Post(endpoint string, headers []Header, body io.Reader) ([]byt
 	req.Header.Set("Accept-Encoding", "deflate")
 	req.Header.Set("X-Transaction-Id", "fd0ce62c-9843-439d-88b4-591ec2326d07")   // TODO: Randomize?
 	req.Header.Set("X-Auth-Session-Id", s.LoginResponse.InstanceSessionID)
-	req.Header.Set("X-Prime-Version", "1.000.31309")
+	req.Header.Set("X-Prime-Version", "1.000.31437")
 	req.Header.Set("Content-Type", "application/x-protobuf")
 	req.Header.Set("Accept", "application/x-protobuf")   // Ripper recommends application/json but testing doesn't show a difference in return value
 	req.Header.Set("X-Unity-Version", UnityVersion)
@@ -111,6 +113,8 @@ func (s *Session) Post(endpoint string, headers []Header, body io.Reader) ([]byt
 		return nil, err
 	}
 	if resp.StatusCode != 200 {
+		log.Printf("error code %d: %s", resp.StatusCode, resp.Status)
+		log.Printf("request: %+v", req)
 		return nil, ErrNoSuccess
 	}
 	defer resp.Body.Close()
@@ -135,5 +139,21 @@ func (s *Session) Sync(n int) (*SyncJSON, error) {
 		return nil, err
 	}
 	return &syncJson, nil
+}
+
+func (s *Session) Profiles(userIds []string) ([]*Profiles_Payload_Payload2_Profile, error) {
+	b, err := json.MarshalIndent(map[string][]string{"user_ids": userIds}, "", "  ")
+	if err != nil {
+		return nil, err
+	}
+	body, err := s.Post("/user_profile/profiles", []Header{{"X-Prime-Sync", "0"}}, bytes.NewReader(b))
+	if err != nil {
+		return nil, err
+	}
+	var profiles Profiles
+	if err := proto.Unmarshal(body, &profiles); err != nil {
+		return nil, err
+	}
+	return profiles.Payload.Payload2.Profile, nil
 }
 

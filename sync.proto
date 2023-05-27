@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package stfc;
 
-option go_package="github.com/eslindsey/stfc";
+option go_package = "github.com/eslindsey/stfc";
 
 message Sync {
 	message Payload {
