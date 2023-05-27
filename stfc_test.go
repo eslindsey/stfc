@@ -2,16 +2,16 @@ package stfc
 
 import (
 	"io/ioutil"
-	"log"
 	"testing"
 
 	"github.com/go-yaml/yaml"
 )
 
 var secrets struct {
-	AdhocUsername   string   `yaml:"adhoc_username"`
-	AdhocPassword   string   `yaml:"adhoc_password"`
-	ProfilesUserIDs []string `yaml:"profiles_user_ids"`
+	AdhocUsername          string   `yaml:"adhoc_username"`
+	AdhocPassword          string   `yaml:"adhoc_password"`
+	ProfilesUserIDs        []string `yaml:"profiles_user_ids"`
+	AlliancesPublicInfoIDs []uint64 `yaml:"alliances_public_info_ids"`
 }
 
 var (
@@ -28,9 +28,15 @@ func TestAll(t *testing.T) {
 		t.Fatalf("Couldn't unmarshal secrets: %s", err)
 	}
 	//log.Printf("Using secrets: %+v", secrets)
-	t.Run("Login",    testLogin)
-	t.Run("Sync2",    testSync2)
-	t.Run("Profiles", testProfiles)
+	t.Run("Login",          testLogin)
+	t.Run("Sync2",          testSync2)
+	if len(secrets.ProfilesUserIDs) > 0 {
+		t.Run("Profiles",       testProfiles)
+	}
+	if len(secrets.AlliancesPublicInfoIDs) > 0 {
+		//t.Run("AlliancesProto", testAlliancesProto)
+		t.Run("AlliancesJson",  testAlliancesJson)
+	}
 }
 
 func testLogin(t *testing.T) {
@@ -57,5 +63,21 @@ func testProfiles(t *testing.T) {
 		t.Fatalf("Profiles failed: %s", err)
 	}
 	t.Logf("Profiles succeeded: %v", profiles)
+}
+
+//func testAlliancesProto(t *testing.T) {
+//	alliances, err := s.AlliancesProto(secrets.AlliancesPublicInfoIDs)
+//	if err != nil {
+//		t.Fatalf("AlliancesProto failed: %s", err)
+//	}
+//	t.Logf("AlliancesProto succeeded: %v", alliances)
+//}
+
+func testAlliancesJson(t *testing.T) {
+	alliances, err := s.AlliancesJson(secrets.AlliancesPublicInfoIDs)
+	if err != nil {
+		t.Fatalf("AlliancesJson failed: %s", err)
+	}
+	t.Logf("AlliancesJson succeeded: %+v", alliances)
 }
 

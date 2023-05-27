@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package stfc;
+
+option go_package = "github.com/eslindsey/stfc";
+
+message AllianceEndpoint {
+	message Details {
+		uint32 type = 1;  // 71 for protobuf (AlliancesPublicInfo), 42 for JSON?
+		bytes details = 2;
+	}
+	repeated Details details = 1;
+	string version = 5;
+}
+
+message AlliancesPublicInfo {
+	message AlliancePublicInfo {
+		string id = 1;
+		string name = 2;
+		string tag = 3;
+		uint32 emblem = 4;
+		uint32 unknown1 = 5;
+		uint32 level = 6;
+		message AllianceInfoUnknown {
+			uint32 unknown1 = 1;
+			uint64 unknown2 = 2;
+		}
+		AllianceInfoUnknown unknown2 = 7;
+		uint32 gameworld_id = 8;
+	}
+	repeated AlliancePublicInfo alliances_info = 1;
+}
+

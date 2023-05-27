@@ -1,5 +1,5 @@
 .PHONY: all
-all: sync.pb.go
+all: *.pb.go
 	go test -v
 
 %.pb.go: %.proto

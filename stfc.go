@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"google.golang.org/protobuf/proto"
 )
@@ -23,8 +24,9 @@ const (
 )
 
 var (
-	ErrNoSuccess   = errors.New("non-200 response code")
-	ErrNilArgument = errors.New("nil argument")
+	ErrNoSuccess    = errors.New("non-200 response code")
+	ErrNilArgument  = errors.New("nil argument")
+	ErrTypeNotFound = errors.New("requested type not found")
 )
 
 func init() {
@@ -33,6 +35,13 @@ func init() {
 type Session struct {
 	LoginResponse AccountsLogin
 	LiveHost      string
+	Alive         bool
+}
+
+type AllianceRequest struct {
+	UserCurrentRank uint     `json:"user_current_rank"`
+	AllianceID      uint64   `json:"alliance_id"`
+	AllianceIDs     []uint64 `json:"alliance_ids"`
 }
 
 /*
@@ -82,6 +91,7 @@ func Login(username, password string) (*Session, error) {
 		return nil, err
 	}
 	ret.LiveHost = fmt.Sprintf("https://live-%03d-web.startrek.digitgaming.com", ret.LoginResponse.InstanceAccount.InstanceIDCurrent)
+	go ret.keepalive()
 	return &ret, nil
 }
 
@@ -93,14 +103,20 @@ func (s *Session) Post(endpoint string, headers []Header, body io.Reader) ([]byt
 	if s == nil {
 		return nil, ErrNilArgument
 	}
+	var tee io.Reader
+	var buf bytes.Buffer
+	if body != nil {
+		tee = io.TeeReader(body, &buf)
+	}
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", s.LiveHost + endpoint, body)
+	req, err := http.NewRequest("POST", s.LiveHost + endpoint, tee)
 	req.Header.Set("User-Agent", UserAgent)
 	req.Header.Set("Accept-Encoding", "deflate")
 	req.Header.Set("X-Transaction-Id", "fd0ce62c-9843-439d-88b4-591ec2326d07")   // TODO: Randomize?
 	req.Header.Set("X-Auth-Session-Id", s.LoginResponse.InstanceSessionID)
 	req.Header.Set("X-Prime-Version", "1.000.31437")
 	req.Header.Set("Content-Type", "application/x-protobuf")
+	req.Header.Set("X-Prime-Sync", "0")
 	req.Header.Set("Accept", "application/x-protobuf")   // Ripper recommends application/json but testing doesn't show a difference in return value
 	req.Header.Set("X-Unity-Version", UnityVersion)
 	if headers != nil {
@@ -114,7 +130,10 @@ func (s *Session) Post(endpoint string, headers []Header, body io.Reader) ([]byt
 	}
 	if resp.StatusCode != 200 {
 		log.Printf("error code %d: %s", resp.StatusCode, resp.Status)
-		log.Printf("request: %+v", req)
+		log.Printf("request:\n%#v", req)
+		if b, err := io.ReadAll(&buf); err == nil {
+			log.Println("body:\n" + string(b))
+		}
 		return nil, ErrNoSuccess
 	}
 	defer resp.Body.Close()
@@ -142,11 +161,11 @@ func (s *Session) Sync(n int) (*SyncJSON, error) {
 }
 
 func (s *Session) Profiles(userIds []string) ([]*Profiles_Payload_Payload2_Profile, error) {
-	b, err := json.MarshalIndent(map[string][]string{"user_ids": userIds}, "", "  ")
+	b, err := json.Marshal(map[string][]string{"user_ids": userIds})
 	if err != nil {
 		return nil, err
 	}
-	body, err := s.Post("/user_profile/profiles", []Header{{"X-Prime-Sync", "0"}}, bytes.NewReader(b))
+	body, err := s.Post("/user_profile/profiles", nil, bytes.NewReader(b))
 	if err != nil {
 		return nil, err
 	}
@@ -155,5 +174,65 @@ func (s *Session) Profiles(userIds []string) ([]*Profiles_Payload_Payload2_Profi
 		return nil, err
 	}
 	return profiles.Payload.Payload2.Profile, nil
+}
+
+//func (s *Session) AlliancesProto(allianceIds []uint64) ([]*AlliancesPublicInfo_AlliancePublicInfo, error) {
+//	b, err := s.Alliances(allianceIds, 71)
+//	if err != nil {
+//		return nil, err
+//	}
+//	var details []*AlliancesPublicInfo_AlliancePublicInfo
+//	if err = proto.Unmarshal(b, &details); err != nil {
+//		return nil, err
+//	}
+//	return details, nil
+//}
+
+func (s *Session) AlliancesJson(allianceIds []uint64) (*AlliancesPublicInfoJson, error) {
+	b, err := s.Alliances(allianceIds, 42)
+	if err != nil {
+		return nil, err
+	}
+	var details AlliancesPublicInfoWrapperJson
+	if err = json.Unmarshal(b, &details); err != nil {
+		return nil, err
+	}
+	if unwrapped, ok := details["alliances_info"]; ok {
+		return unwrapped, nil
+	}
+	return nil, ErrTypeNotFound
+}
+
+func (s *Session) Alliances(allianceIds []uint64, requestedType uint32) ([]byte, error) {
+	b, err := json.Marshal(&AllianceRequest{AllianceIDs: allianceIds})
+	if err != nil {
+		return nil, err
+	}
+	body, err := s.Post("/alliance/get_alliances_public_info", nil, bytes.NewReader(b))
+	if err != nil {
+		return nil, err
+	}
+	var alliance AllianceEndpoint
+	if err := proto.Unmarshal(body, &alliance); err != nil {
+		return nil, err
+	}
+	for _, d := range alliance.Details {
+		if d.Type == requestedType {
+			return d.Details, nil
+		}
+	}
+	return nil, ErrTypeNotFound
+}
+
+func (s *Session) keepalive() {
+	s.Alive = true
+	for s.Alive {
+		time.Sleep(time.Minute)
+		_, err := s.Sync(1)   // TODO: Update state with received data
+		if err != nil {
+			log.Printf("Session %s keepalive failure: %s", s.LoginResponse.InstanceSessionID, err)
+			s.Alive = false
+		}
+	}
 }
 
