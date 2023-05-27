@@ -8,6 +8,8 @@ import (
 )
 
 var secrets struct {
+	ScopelyIDEmail         string   `yaml:"scopelyid_email"`
+	ScopelyIDPassword      string   `yaml:"scopelyid_password"`
 	AdhocUsername          string   `yaml:"adhoc_username"`
 	AdhocPassword          string   `yaml:"adhoc_password"`
 	ProfilesUserIDs        []string `yaml:"profiles_user_ids"`
@@ -28,6 +30,7 @@ func TestAll(t *testing.T) {
 		t.Fatalf("Couldn't unmarshal secrets: %s", err)
 	}
 	//log.Printf("Using secrets: %+v", secrets)
+	t.Run("ScopelyID",      testScopelyID)
 	t.Run("Login",          testLogin)
 	t.Run("Sync2",          testSync2)
 	if len(secrets.ProfilesUserIDs) > 0 {
@@ -37,6 +40,14 @@ func TestAll(t *testing.T) {
 		//t.Run("AlliancesProto", testAlliancesProto)
 		t.Run("AlliancesJson",  testAlliancesJson)
 	}
+}
+
+func testScopelyID(t *testing.T) {
+	_, err := ScopelyID(secrets.ScopelyIDEmail, secrets.ScopelyIDPassword)
+	if err != nil {
+		t.Fatalf("Scopely ID failed: %s", err)
+	}
+	t.Logf("Scopely ID succeeded")
 }
 
 func testLogin(t *testing.T) {

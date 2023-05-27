@@ -24,12 +24,18 @@ const (
 )
 
 var (
-	ErrNoSuccess    = errors.New("non-200 response code")
-	ErrNilArgument  = errors.New("nil argument")
-	ErrTypeNotFound = errors.New("requested type not found")
+	ErrNoSuccess      = errors.New("non-200 response code")
+	ErrNilArgument    = errors.New("nil argument")
+	ErrTypeNotFound   = errors.New("requested type not found")
+	ErrNotImplemented = errors.New("not implemented")
 )
 
 func init() {
+}
+
+type AdhocCredentials struct {
+	AdhocUsername string `json:"adhoc_username" bson:"adhoc_username"`
+	AdhocPassword string `json:"adhoc_password" bson:"adhoc_password"`
 }
 
 type Session struct {
@@ -47,6 +53,10 @@ type AllianceRequest struct {
 /*
  * GENERAL FUNCTIONS
  */
+
+func ScopelyID(email, password string) (*AdhocCredentials, error) {
+	return nil, ErrNotImplemented
+}
 
 func Login(username, password string) (*Session, error) {
 	client := &http.Client{}
@@ -160,7 +170,7 @@ func (s *Session) Sync(n int) (*SyncJSON, error) {
 	return &syncJson, nil
 }
 
-func (s *Session) Profiles(userIds []string) ([]*Profiles_Payload_Payload2_Profile, error) {
+func (s *Session) Profiles(userIds []string) ([]*Profile, error) {
 	b, err := json.Marshal(map[string][]string{"user_ids": userIds})
 	if err != nil {
 		return nil, err
