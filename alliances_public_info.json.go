@@ -2,7 +2,9 @@ package stfc
 
 type AlliancesPublicInfoWrapperJson map[string]*AlliancesPublicInfoJson
 
-type AlliancesPublicInfoJson map[string]struct {
+type AlliancesPublicInfoJson map[string]*AlliancePublicInfoJson
+
+type AlliancePublicInfoJson struct {
 	ID            uint64 `json:"id"`
 	Name          string `json:"name"`
 	Slogan        string `json:"slogan"`
