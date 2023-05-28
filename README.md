@@ -36,4 +36,4 @@ sync, err := session.Sync(2)
 fmt.Printf("You have %d types of resources.\n", len(sync.Resources))
 ```
 
-For more, see [stfc_test.go](blob/main/stfc_test.go).
+For more, see [stfc_test.go](stfc_test.go).
