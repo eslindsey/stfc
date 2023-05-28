@@ -37,3 +37,14 @@ fmt.Printf("You have %d types of resources.\n", len(sync.Resources))
 ```
 
 For more, see [stfc_test.go](stfc_test.go).
+
+## Disclaimer
+
+This material is unofficial and is not endorsed by Scopely, Paramount, Digit,
+or any other entity. This work is provided on an "AS IS" BASIS, WITHOUT
+WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied, including,
+without limitation, any warranties or conditions of TITLE, NON-INFRINGEMENT,
+MERCHANTABILITY, or FITNESS FOR A PARTICULAR PURPOSE. You are solely
+responsible for determining the appropriateness of using this work and assume
+any risks associated with your use of it.
+
