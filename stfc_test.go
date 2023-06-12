@@ -1,14 +1,10 @@
 package stfc
 
 import (
-	"encoding/json"
 	"io/ioutil"
-	"math"
 	"testing"
 
 	"github.com/go-yaml/yaml"
-	"gonum.org/v1/gonum/graph/simple"
-	"gonum.org/v1/gonum/graph/path"
 )
 
 var secrets struct {
@@ -18,19 +14,18 @@ var secrets struct {
 	AdhocPassword          string   `yaml:"adhoc_password"`
 	ProfilesUserIDs        []string `yaml:"profiles_user_ids"`
 	AlliancesPublicInfoIDs []uint64 `yaml:"alliances_public_info_ids"`
+	WarpTest *struct {
+		FleetID  uint64 `yaml:"fleet_id"`
+		Location NodeId `yaml:"location"`
+		Target   NodeId `yaml:"target"`
+	} `yaml:"warp_test"`
 }
 
 var (
 	s *Session
-	g *GalaxyOptimised
-	graph *simple.WeightedDirectedGraph
 )
 
 func TestAll(t *testing.T) {
-	t.Run("Nodes",        testNodes)
-	t.Run("BuildGraph",   testBuildGraph)
-	t.Run("ShortestPath", testShortestPath)
-
 	b, err := ioutil.ReadFile(".secrets.yaml")
 	if err != nil {
 		t.Fatalf("Couldn't read secrets file: %s", err)
@@ -50,40 +45,22 @@ func TestAll(t *testing.T) {
 		//t.Run("AlliancesProto", testAlliancesProto)
 		t.Run("AlliancesJson",  testAlliancesJson)
 	}
+	if secrets.WarpTest != nil {
+		t.Run("Warp", testWarp)
+	}
 }
 
-func testNodes(t *testing.T) {
-	b, err := ioutil.ReadFile("static/nodes.json")
+func testWarp(t *testing.T) {
+	ship := &Ship{
+		Session:  s,
+		FleetId:  secrets.WarpTest.FleetID,
+		Location: secrets.WarpTest.Location,
+	}
+	err := ship.WarpTo(secrets.WarpTest.Target, 0.0, 0.0, false)
 	if err != nil {
-		t.Fatalf("Nodes failed: %s", err)
+		t.Fatalf("Warp error: %v", err)
 	}
-	err = json.Unmarshal(b, &g)
-	if err != nil {
-		t.Fatalf("Nodes failed: %s", err)
-	}
-	t.Logf("Nodes succeeded")
-	t.Logf("Nodes: %d", len(g.Nodes))
-	t.Logf("Paths: %d", len(g.Paths))
-}
-
-func testBuildGraph(t *testing.T) {
-	graph = simple.NewWeightedDirectedGraph(0, math.Inf(1))
-	for _, path := range g.Paths {
-		graph.SetWeightedEdge(simple.WeightedEdge{
-			F: simple.Node(path.SourceId),
-			T: simple.Node(path.DestId),
-			W: float64(path.Distance),
-		})
-	}
-}
-
-func testShortestPath(t *testing.T) {
-	start  := 55         // Yridia System
-	finish := 119043632  // Teranth System
-	shortest := path.DijkstraFrom(simple.Node(start), graph)
-	path, weight := shortest.To(int64(finish))
-	t.Logf("ShortestPath from %d to %d succeeded (%d hops, %.0f distance)", start, finish, len(path), weight)
-	t.Logf("Path: %v", path)
+	t.Fatalf("Warp success")
 }
 
 func testScopelyID(t *testing.T) {

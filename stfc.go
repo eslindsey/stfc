@@ -2,10 +2,12 @@ package stfc
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -24,10 +26,12 @@ const (
 )
 
 var (
-	ErrNoSuccess      = errors.New("non-200 response code")
-	ErrNilArgument    = errors.New("nil argument")
-	ErrTypeNotFound   = errors.New("requested type not found")
-	ErrNotImplemented = errors.New("not implemented")
+	ErrNoSuccess          = errors.New("non-200 response code")
+	ErrNilArgument        = errors.New("nil argument")
+	ErrTypeNotFound       = errors.New("requested type not found")
+	ErrNotImplemented     = errors.New("not implemented")
+	ErrEmptyResponse      = errors.New("empty response")
+	ErrSyncMissingPayload = errors.New("sync missing JSON payload")
 )
 
 func init() {
@@ -42,6 +46,7 @@ type Session struct {
 	LoginResponse AccountsLogin
 	LiveHost      string
 	Alive         bool
+	galaxy        *Galaxy
 }
 
 type AllianceRequest struct {
@@ -95,10 +100,16 @@ func Login(username, password string) (*Session, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(body) < 1 {
+		return nil, ErrEmptyResponse
+	}
 	var ret Session
 	err = json.Unmarshal(body, &ret.LoginResponse)
 	if err != nil {
 		return nil, err
+	}
+	if ret.LoginResponse.HTTPCode != 200 {
+		return nil, ErrNoSuccess
 	}
 	ret.LiveHost = fmt.Sprintf("https://live-%03d-web.startrek.digitgaming.com", ret.LoginResponse.InstanceAccount.InstanceIDCurrent)
 	go ret.keepalive()
@@ -142,7 +153,8 @@ func (s *Session) Post(endpoint string, headers []Header, body io.Reader) ([]byt
 		log.Printf("error code %d: %s", resp.StatusCode, resp.Status)
 		log.Printf("request:\n%#v", req)
 		if b, err := io.ReadAll(&buf); err == nil {
-			log.Println("body:\n" + string(b))
+			log.Println("body (str):\n" + string(b))
+			log.Println("body (hex):\n" + hex.EncodeToString(b))
 		}
 		return nil, ErrNoSuccess
 	}
@@ -164,7 +176,7 @@ func (s *Session) Sync(n int) (*SyncJSON, error) {
 		return nil, err
 	}
 	if sync.Payload == nil {
-		return nil, errors.New("sync payload is nil")
+		return nil, ErrSyncMissingPayload
 	}
 	var syncJson SyncJSON
 	if err := json.Unmarshal([]byte(sync.Payload.Json), &syncJson); err != nil {
@@ -247,5 +259,24 @@ func (s *Session) keepalive() {
 			s.Alive = false
 		}
 	}
+}
+
+/*
+ * UTILITY FUNCTIONS
+ */
+
+// Lazy load the galaxy
+func (s *Session) Galaxy() (*Galaxy, error) {
+	if s.galaxy == nil {
+		b, err := ioutil.ReadFile("static/nodes.json")
+		if err != nil {
+			return nil, err
+		}
+		err = json.Unmarshal(b, &s.galaxy)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return s.galaxy, nil
 }
 
