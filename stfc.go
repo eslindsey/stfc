@@ -163,6 +163,9 @@ func (s *Session) Sync(n int) (*SyncJSON, error) {
 	if err := proto.Unmarshal(body, &sync); err != nil {
 		return nil, err
 	}
+	if sync.Payload == nil {
+		return nil, errors.New("sync payload is nil")
+	}
 	var syncJson SyncJSON
 	if err := json.Unmarshal([]byte(sync.Payload.Json), &syncJson); err != nil {
 		return nil, err
