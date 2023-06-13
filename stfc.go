@@ -43,7 +43,8 @@ type AdhocCredentials struct {
 }
 
 type Session struct {
-	LoginResponse AccountsLogin
+	LoginResponse *AccountsLogin
+	Sync2Response *SyncJSON
 	LiveHost      string
 	Alive         bool
 	galaxy        *Galaxy
@@ -178,11 +179,18 @@ func (s *Session) Sync(n int) (*SyncJSON, error) {
 	if sync.Payload == nil {
 		return nil, ErrSyncMissingPayload
 	}
-	var syncJson SyncJSON
-	if err := json.Unmarshal([]byte(sync.Payload.Json), &syncJson); err != nil {
+	var dest *SyncJSON
+	if n == 2 {
+		dest = s.Sync2Response
+	}
+	dest = &SyncJSON{}
+	if err := json.Unmarshal([]byte(sync.Payload.Json), dest); err != nil {
 		return nil, err
 	}
-	return &syncJson, nil
+	if n == 2 {
+		s.populateVisited()
+	}
+	return dest, nil
 }
 
 func (s *Session) Profiles(userIds []string) ([]*Profile, error) {
@@ -276,7 +284,17 @@ func (s *Session) Galaxy() (*Galaxy, error) {
 		if err != nil {
 			return nil, err
 		}
+		s.populateVisited()
 	}
 	return s.galaxy, nil
+}
+
+func (s *Session) populateVisited() {
+	if s.Sync2Response == nil || s.galaxy == nil {
+		return
+	}
+	for i, v := range s.Sync2Response.VisitedSystems {
+		s.galaxy.Nodes[i].IsVisited = v
+	}
 }
 

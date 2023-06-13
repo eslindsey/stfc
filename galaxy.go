@@ -38,6 +38,9 @@ type GalaxyNode struct {
 	MiningSetups         []uint64  // TODO: Convert to enum
 	MarauderSpawnRuleIds []uint64
 	IsDeepSpace          bool
+
+	// Not part of galaxy_optimised endpoint
+	IsVisited            bool
 }
 
 type GalaxyPath struct {
@@ -125,24 +128,48 @@ func (g *Galaxy) Get(s NodeId) (*GalaxyNode, bool) {
 	return val, ok
 }
 
-func (g *Galaxy) Shortest(from, to NodeId) ([]NodeId, uint64) {
-	if g.graph == nil {
-		// Create a graph for the paths
-		g.graph = simple.NewWeightedDirectedGraph(0, math.Inf(1))
-		for _, path := range g.Paths {
-			g.graph.SetWeightedEdge(simple.WeightedEdge{
-				F: simple.Node(path.SourceId),
-				T: simple.Node(path.DestId),
-				W: float64(path.Distance),
-			})
-		}
+type ShortestOptions struct {
+	MaxWarp *int
+	MinWarp *int
+}
+
+func (g *Galaxy) Shortest(from, to NodeId, options ...*ShortestOptions) ([]NodeId, uint64) {
+	//opts := ShortestOptionsArray(options).Gather()
+	// Create a graph
+	graph := simple.NewWeightedDirectedGraph(0, math.Inf(1))
+	for _, path := range g.Paths {
+		// TODO: Check warp range options
+		graph.SetWeightedEdge(simple.WeightedEdge{
+			F: simple.Node(path.SourceId),
+			T: simple.Node(path.DestId),
+			W: float64(path.Distance),
+		})
 	}
-	shortest := path.DijkstraFrom(simple.Node(from), g.graph)
+	// Calculate shortest path
+	shortest := path.DijkstraFrom(simple.Node(from), graph)
 	path, distance := shortest.To(int64(to))
 	ret := make([]NodeId, len(path))
 	for i, _ := range path {
 		ret[i] = NodeId(path[i].ID())
 	}
 	return ret, uint64(distance)
+}
+
+type ShortestOptionsArray []*ShortestOptions
+
+func (soa ShortestOptionsArray) Gather() *ShortestOptions {
+	// Later options override earlier options
+	if len(soa) < 1 {
+		soa = append(soa, &ShortestOptions{})
+	}
+	for i := 1; i < len(soa); i++ {
+		if soa[i].MaxWarp != nil {
+			soa[0].MaxWarp = soa[i].MaxWarp
+		}
+		if soa[i].MinWarp != nil {
+			soa[0].MinWarp = soa[i].MinWarp
+		}
+	}
+	return soa[0]
 }
 

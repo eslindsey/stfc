@@ -1,10 +1,18 @@
 package stfc
 
+import (
+	"errors"
+)
+
 type Ship struct {
 	Session  *Session
 	FleetId  uint64
 	Location NodeId
 }
+
+var (
+	ErrNoPathFound = errors.New("no path found")
+)
 
 func (s *Ship) WarpTo(target NodeId, x, y float32, instant bool) error {
 	g, err := s.Session.Galaxy()
