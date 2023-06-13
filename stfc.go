@@ -14,8 +14,6 @@ import (
 	"net/url"
 	"strings"
 	"time"
-
-	"google.golang.org/protobuf/proto"
 )
 
 type Header struct {Key, Value string}
@@ -169,48 +167,6 @@ func (s *Session) Post(endpoint string, headers []Header, body io.Reader) ([]byt
 	return respBody, nil
 }
 
-func (s *Session) Sync(n int) (*SyncJSON, error) {
-	body, err := s.Post("/sync", []Header{{"X-Prime-Sync", fmt.Sprintf("%d", n)}}, nil)
-	if err != nil {
-		return nil, err
-	}
-	var sync Sync
-	if err := proto.Unmarshal(body, &sync); err != nil {
-		return nil, err
-	}
-	if sync.Payload == nil {
-		return nil, ErrSyncMissingPayload
-	}
-	var dest *SyncJSON
-	if n == 2 {
-		dest = s.Sync2Response
-	}
-	dest = &SyncJSON{}
-	if err := json.Unmarshal([]byte(sync.Payload.Json), dest); err != nil {
-		return nil, err
-	}
-	if n == 2 {
-		s.populateVisited()
-	}
-	return dest, nil
-}
-
-func (s *Session) Profiles(userIds []string) ([]*Profile, error) {
-	b, err := json.Marshal(map[string][]string{"user_ids": userIds})
-	if err != nil {
-		return nil, err
-	}
-	body, err := s.Post("/user_profile/profiles", nil, bytes.NewReader(b))
-	if err != nil {
-		return nil, err
-	}
-	var profiles Profiles
-	if err := proto.Unmarshal(body, &profiles); err != nil {
-		return nil, err
-	}
-	return profiles.Payload.Payload2.Profile, nil
-}
-
 //func (s *Session) AlliancesProto(allianceIds []uint64) ([]*AlliancesPublicInfo_AlliancePublicInfo, error) {
 //	b, err := s.Alliances(allianceIds, 71)
 //	if err != nil {
@@ -224,7 +180,7 @@ func (s *Session) Profiles(userIds []string) ([]*Profile, error) {
 //}
 
 func (s *Session) AlliancesJson(allianceIds []uint64) (*AlliancesPublicInfoJson, error) {
-	b, err := s.Alliances(allianceIds, 42)
+	b, err := s.AllianceGetAlliancesPublicInfo(allianceIds, 42)
 	if err != nil {
 		return nil, err
 	}
@@ -234,27 +190,6 @@ func (s *Session) AlliancesJson(allianceIds []uint64) (*AlliancesPublicInfoJson,
 	}
 	if unwrapped, ok := details["alliances_info"]; ok {
 		return unwrapped, nil
-	}
-	return nil, ErrTypeNotFound
-}
-
-func (s *Session) Alliances(allianceIds []uint64, requestedType uint32) ([]byte, error) {
-	b, err := json.Marshal(&AllianceRequest{AllianceIDs: allianceIds})
-	if err != nil {
-		return nil, err
-	}
-	body, err := s.Post("/alliance/get_alliances_public_info", nil, bytes.NewReader(b))
-	if err != nil {
-		return nil, err
-	}
-	var alliance AllianceEndpoint
-	if err := proto.Unmarshal(body, &alliance); err != nil {
-		return nil, err
-	}
-	for _, d := range alliance.Details {
-		if d.Type == requestedType {
-			return d.Details, nil
-		}
 	}
 	return nil, ErrTypeNotFound
 }

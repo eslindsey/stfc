@@ -15,11 +15,6 @@ var secrets struct {
 	AdhocPassword          string   `yaml:"adhoc_password"`
 	ProfilesUserIDs        []string `yaml:"profiles_user_ids"`
 	AlliancesPublicInfoIDs []uint64 `yaml:"alliances_public_info_ids"`
-	WarpTest *struct {
-		FleetID  uint64 `yaml:"fleet_id"`
-		Location NodeId `yaml:"location"`
-		Target   NodeId `yaml:"target"`
-	} `yaml:"warp_test"`
 }
 
 var (
@@ -46,9 +41,6 @@ func TestAll(t *testing.T) {
 	if len(secrets.AlliancesPublicInfoIDs) > 0 {
 		//t.Run("AlliancesProto", testAlliancesProto)
 		t.Run("AlliancesJson",  testAlliancesJson)
-	}
-	if secrets.WarpTest != nil {
-		t.Run("Warp", testWarp)
 	}
 }
 
@@ -108,7 +100,7 @@ Visit Data: info for %d of %.0f total (%.1f%%), visited %.0f (%.1f%%)`, sync.Sta
 }
 
 func testProfiles(t *testing.T) {
-	profiles, err := s.Profiles(secrets.ProfilesUserIDs)
+	profiles, err := s.UserProfileProfiles(secrets.ProfilesUserIDs)
 	if err != nil {
 		t.Fatalf("Profiles failed: %s", err)
 	}
@@ -130,18 +122,4 @@ func testAlliancesJson(t *testing.T) {
 	}
 	t.Logf("AlliancesJson succeeded: %+v", alliances)
 }
-
-func testWarp(t *testing.T) {
-	ship := &Ship{
-		Session:  s,
-		FleetId:  secrets.WarpTest.FleetID,
-		Location: secrets.WarpTest.Location,
-	}
-	err := ship.WarpTo(secrets.WarpTest.Target, 0.0, 0.0, false)
-	if err != nil {
-		t.Fatalf("Warp error: %v", err)
-	}
-	t.Fatalf("Warp success")
-}
-
 
