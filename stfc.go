@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"strings"
@@ -20,9 +21,10 @@ import (
 type Header struct {Key, Value string}
 
 const (
-	AppID        = "4af7c20b-7646-4fb7-b64f-ae0a8c51c1f1"
-	UnityVersion = "2020.3.18f1-digit-multiple-fixes-build"
-	UserAgent    = "UnityPlayer/" + UnityVersion + " (UnityWebRequest/1.0, libcurl/7.75.0-DEV)"
+	AppID         = "4af7c20b-7646-4fb7-b64f-ae0a8c51c1f1"
+	UnityVersion  = "2020.3.18f1-digit-multiple-fixes-build"
+	UserAgent     = "UnityPlayer/" + UnityVersion + " (UnityWebRequest/1.0, libcurl/7.75.0-DEV)"
+	XPrimeVersion = "1.000.31437"  // Since: "1.000.31110"
 )
 
 var (
@@ -70,8 +72,8 @@ func Login(username, password string) (*Session, error) {
 	req.Header.Set("User-Agent",       UserAgent)
 	req.Header.Set("Accept",           "*/*")
 	req.Header.Set("Accept-Encoding",  "deflate")
-	req.Header.Set("X-TRANSACTION-ID", "ca98560c-e47c-4af5-b859-e35764181733")   // TODO: Randomize?
-	req.Header.Set("X-PRIME-VERSION",  "1.000.31110")
+	req.Header.Set("X-TRANSACTION-ID", randomTransactionId())
+	req.Header.Set("X-PRIME-VERSION",  XPrimeVersion)
 	req.Header.Set("X-Suppress-Codes", "1")
 	req.Header.Set("Content-Type",     "application/x-www-form-urlencoded")
 	req.Header.Set("X-Api-Key",        "FCX2QsbxHjSP52B")
@@ -134,9 +136,9 @@ func (s *Session) Post(endpoint string, headers []Header, body io.Reader) ([]byt
 	req, err := http.NewRequest("POST", s.LiveHost + endpoint, tee)
 	req.Header.Set("User-Agent", UserAgent)
 	req.Header.Set("Accept-Encoding", "deflate")
-	req.Header.Set("X-Transaction-Id", "fd0ce62c-9843-439d-88b4-591ec2326d07")   // TODO: Randomize?
+	req.Header.Set("X-Transaction-Id", randomTransactionId())
 	req.Header.Set("X-Auth-Session-Id", s.LoginResponse.InstanceSessionID)
-	req.Header.Set("X-Prime-Version", "1.000.31437")
+	req.Header.Set("X-Prime-Version", XPrimeVersion)
 	req.Header.Set("Content-Type", "application/x-protobuf")
 	req.Header.Set("X-Prime-Sync", "0")
 	req.Header.Set("Accept", "application/x-protobuf")   // Ripper recommends application/json but testing doesn't show a difference in return value
@@ -269,10 +271,6 @@ func (s *Session) keepalive() {
 	}
 }
 
-/*
- * UTILITY FUNCTIONS
- */
-
 // Lazy load the galaxy
 func (s *Session) Galaxy() (*Galaxy, error) {
 	if s.galaxy == nil {
@@ -296,5 +294,22 @@ func (s *Session) populateVisited() {
 	for i, v := range s.Sync2Response.VisitedSystems {
 		s.galaxy.Nodes[i].IsVisited = v
 	}
+}
+
+/*
+ * UTILITY FUNCTIONS
+ */
+
+func randomTransactionId() string {
+	// "ca98560c-e47c-4af5-b859-e35764181733"
+	// "fd0ce62c-9843-439d-88b4-591ec2326d07"
+	return fmt.Sprintf(
+		"%08x-%04x-%04x-%04x-%012x",
+		rand.Intn(0xffffffff),
+		rand.Intn(0xffff),
+		rand.Intn(0xffff),
+		rand.Intn(0xffff),
+		rand.Intn(0xffffffffffff),
+	)
 }
 
