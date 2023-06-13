@@ -21,10 +21,10 @@ import (
 type Header struct {Key, Value string}
 
 const (
-	AppID         = "4af7c20b-7646-4fb7-b64f-ae0a8c51c1f1"
-	UnityVersion  = "2020.3.18f1-digit-multiple-fixes-build"
-	UserAgent     = "UnityPlayer/" + UnityVersion + " (UnityWebRequest/1.0, libcurl/7.75.0-DEV)"
-	XPrimeVersion = "1.000.31437"  // Since: "1.000.31110"
+	AppID        = "4af7c20b-7646-4fb7-b64f-ae0a8c51c1f1"
+	UnityVersion = "2020.3.18f1-digit-multiple-fixes-build"
+	UserAgent    = "UnityPlayer/" + UnityVersion + " (UnityWebRequest/1.0, libcurl/7.75.0-DEV)"
+	PrimeVersion = "1.000.31625"  // Past: 1.000.31437, 1.000.31110
 )
 
 var (
@@ -73,7 +73,7 @@ func Login(username, password string) (*Session, error) {
 	req.Header.Set("Accept",           "*/*")
 	req.Header.Set("Accept-Encoding",  "deflate")
 	req.Header.Set("X-TRANSACTION-ID", randomTransactionId())
-	req.Header.Set("X-PRIME-VERSION",  XPrimeVersion)
+	req.Header.Set("X-PRIME-VERSION",  PrimeVersion)
 	req.Header.Set("X-Suppress-Codes", "1")
 	req.Header.Set("Content-Type",     "application/x-www-form-urlencoded")
 	req.Header.Set("X-Api-Key",        "FCX2QsbxHjSP52B")
@@ -138,7 +138,7 @@ func (s *Session) Post(endpoint string, headers []Header, body io.Reader) ([]byt
 	req.Header.Set("Accept-Encoding", "deflate")
 	req.Header.Set("X-Transaction-Id", randomTransactionId())
 	req.Header.Set("X-Auth-Session-Id", s.LoginResponse.InstanceSessionID)
-	req.Header.Set("X-Prime-Version", XPrimeVersion)
+	req.Header.Set("X-Prime-Version", PrimeVersion)
 	req.Header.Set("Content-Type", "application/x-protobuf")
 	req.Header.Set("X-Prime-Sync", "0")
 	req.Header.Set("Accept", "application/x-protobuf")   // Ripper recommends application/json but testing doesn't show a difference in return value
