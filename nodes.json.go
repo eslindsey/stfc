@@ -1,11 +1,9 @@
 package stfc
 
-type NodeId uint64
-
 type GalaxyOptimisedRaw struct {
 	Data struct {
 		// Count: 1367
-		NodeIds              []NodeId   `json:"node_ids"`
+		NodeIds              []uint64   `json:"node_ids"`
 		XCoords              []int      `json:"x_coords"`
 		YCoords              []int      `json:"y_coords"`
 		ConnectionsCount     []uint32   `json:"connections_count"`
@@ -21,8 +19,8 @@ type GalaxyOptimisedRaw struct {
 		IsDeepSpace          []bool     `json:"is_deep_space"`
 
 		// Count: 3292
-		SourceIds      []NodeId `json:"source_ids"`
-		DestIds        []NodeId `json:"dest_ids"`
+		SourceIds      []uint64 `json:"source_ids"`
+		DestIds        []uint64 `json:"dest_ids"`
 		Distances      []uint32 `json:"distances"`
 		UnlockReqCount []uint32 `json:"unlock_req_count"`
 		UnlockOffset   []uint32 `json:"unlock_offset"`

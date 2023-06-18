@@ -6,7 +6,7 @@ import (
 )
 
 type FleetRepairRequest struct {
-	FleetId    FleetId  `json:"fleet_id"`
+	FleetId    uint64  `json:"fleet_id"`
 }
 
 func (s *Session) FleetRepair(request *FleetRepairRequest) ([]byte, error) {
@@ -23,5 +23,4 @@ func (s *Session) FleetRepair(request *FleetRepairRequest) ([]byte, error) {
 /*
 */
 }
-
 

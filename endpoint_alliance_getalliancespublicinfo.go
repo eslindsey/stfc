@@ -8,7 +8,7 @@ import (
 )
 
 func (s *Session) AllianceGetAlliancesPublicInfo(allianceIds []uint64, reqType Message1Type) ([]byte, error) {
-	b, err := json.Marshal(&AllianceRequest{AllianceIDs: allianceIds})
+	b, err := json.Marshal(&AllianceRequest{AllianceIds: allianceIds})
 	if err != nil {
 		return nil, err
 	}

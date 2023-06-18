@@ -4,9 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"math"
+	"math/rand"
 
 	"gonum.org/v1/gonum/graph/simple"
 	"gonum.org/v1/gonum/graph/path"
+)
+
+const (
+	SystemRadius = 1100.0
 )
 
 var (
@@ -19,12 +24,12 @@ type Galaxy struct {
 	UnlockData           []*GalaxyUnlockData
 	SuperHighwaysIndices []uint32
 
-	byId  map[NodeId]*GalaxyNode
+	byId  map[uint64]*GalaxyNode
 	graph *simple.WeightedDirectedGraph
 }
 
 type GalaxyNode struct {
-	Id                   NodeId
+	Id                   uint64
 	XCoord               int
 	YCoord               int
 	ConnectionCount      uint32
@@ -44,8 +49,8 @@ type GalaxyNode struct {
 }
 
 type GalaxyPath struct {
-	SourceId       NodeId
-	DestId         NodeId
+	SourceId       uint64
+	DestId         uint64
 	Distance       uint32
 	UnlockReqCount uint32
 	UnlockOffset   uint32
@@ -117,7 +122,7 @@ func (g *Galaxy) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (g *Galaxy) Get(s NodeId) (*GalaxyNode, bool) {
+func (g *Galaxy) Get(s uint64) (*GalaxyNode, bool) {
 	// Lazy populate
 	if g.byId == nil {
 		for i, n := range g.Nodes {
@@ -133,7 +138,7 @@ type ShortestOptions struct {
 	MinWarp *int
 }
 
-func (g *Galaxy) Shortest(from, to NodeId, options ...*ShortestOptions) ([]NodeId, uint64) {
+func (g *Galaxy) Shortest(from, to uint64, options ...*ShortestOptions) ([]uint64, uint64) {
 	//opts := ShortestOptionsArray(options).Gather()
 	// Create a graph
 	graph := simple.NewWeightedDirectedGraph(0, math.Inf(1))
@@ -148,9 +153,9 @@ func (g *Galaxy) Shortest(from, to NodeId, options ...*ShortestOptions) ([]NodeI
 	// Calculate shortest path
 	shortest := path.DijkstraFrom(simple.Node(from), graph)
 	path, distance := shortest.To(int64(to))
-	ret := make([]NodeId, len(path))
+	ret := make([]uint64, len(path))
 	for i, _ := range path {
-		ret[i] = NodeId(path[i].ID())
+		ret[i] = uint64(path[i].ID())
 	}
 	return ret, uint64(distance)
 }
@@ -171,5 +176,22 @@ func (soa ShortestOptionsArray) Gather() *ShortestOptions {
 		}
 	}
 	return soa[0]
+}
+
+/*
+ * UTILITY FUNCTIONS
+ */
+
+// NOT guaranteed to be within the game's playing field: limit yourself to 1100 radius!
+func TranslateCoords(degrees, radius float64) (float64, float64) {
+	theta := math.Pi / 180.0
+	return radius * math.Cos(theta), radius * math.Sin(theta)
+}
+
+// Guaranteed to be within the game's playing field
+func RandomCoords() (x, y float64) {
+	r := rand.Float64() * SystemRadius
+	d := rand.Float64() * 360.0
+	return TranslateCoords(d, r)
 }
 

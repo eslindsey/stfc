@@ -6,7 +6,7 @@ import (
 )
 
 type FleetModifyFleetRequest struct {
-	FleetId    FleetId  `json:"fleet_id"`
+	FleetId    uint64   `json:"fleet_id"`
 	ShipLayout []uint64 `json:"ship_layout"`
 }
 

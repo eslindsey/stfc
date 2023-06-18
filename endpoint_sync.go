@@ -2,9 +2,14 @@ package stfc
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"google.golang.org/protobuf/proto"
+)
+
+var (
+	ErrNotSynced = errors.New("sync2 has not been performed yet")
 )
 
 func (s *Session) Sync(n int) (*SyncJSON, error) {
@@ -19,16 +24,22 @@ func (s *Session) Sync(n int) (*SyncJSON, error) {
 	if sync.Payload == nil {
 		return nil, ErrSyncMissingPayload
 	}
-	var dest *SyncJSON
+	dest := &SyncJSON{}
 	if n == 2 {
+		if s.Sync2Response == nil {
+			s.Sync2Response = &SyncJSON{}
+		}
 		dest = s.Sync2Response
 	}
-	dest = &SyncJSON{}
 	if err := json.Unmarshal([]byte(sync.Payload.Json), dest); err != nil {
 		return nil, err
 	}
+	if dest.MyDeployedFleets != nil {
+		s.MyDeployedFleets = dest.MyDeployedFleets
+	}
 	if n == 2 {
 		s.populateVisited()
+		s.populateDrydocks()
 	}
 	return dest, nil
 }

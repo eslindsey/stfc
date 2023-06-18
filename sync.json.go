@@ -1,29 +1,26 @@
 package stfc
 
-type UnknownObject struct{}
-type UnknownType   interface{}
-
 type SyncJSON struct {
-	MyDeployedFleets UnknownObject `json:"my_deployed_fleets"`
-	StaticUpdate     UnknownType   `json:"static_update"`
+	MyDeployedFleets MyDeployedFleets `json:"my_deployed_fleets"`
+	StaticUpdate     Unknown      `json:"static_update"`
 	Starbase         struct {
-		UserID   string `json:"user_id"`
+		UserId   string `json:"user_id"`
 		Location struct {
-			Galaxy uint `json:"galaxy"`
-			System uint `json:"system"`
-			Planet uint `json:"planet"`
+			Galaxy uint64 `json:"galaxy"`
+			System uint64 `json:"system"`
+			Planet uint64 `json:"planet"`
 		} `json:"location"`
-		Destination UnknownType `json:"destination"`
+		Destination Unknown `json:"destination"`
 		PeaceShield struct {
-			ID                    uint   `json:"id"`
+			Id                    uint   `json:"id"`
 			Target                uint   `json:"target"`
 			TriggeredOn           string `json:"triggered_on"` // TODO: time.Time
 			ExpiryTime            string `json:"expiry_time"`  // TODO: time.Time
-			PeaceShieldResourceID int    `json:"peace_shield_resource_id"`
+			PeaceShieldResourceId int    `json:"peace_shield_resource_id"`
 		} `json:"peace_shield"`
 		State             uint        `json:"state"`
 		LastRelocation    *string     `json:"last_relocation"` // TODO: nil time.Time
-		BattleID          UnknownType `json:"battle_id"`
+		BattleId          Unknown `json:"battle_id"`
 		CeasefireBrokenAt *string     `json:"ceasefire_broken_at"` // TODO: nil time.Time
 		Coordinates       struct {
 			X int `json:"x"`
@@ -31,12 +28,12 @@ type SyncJSON struct {
 		} `json:"coordinates"`
 	} `json:"starbase"`
 	StarbaseModules map[string]struct {
-		ID    uint `json:"id"`
+		Id    uint `json:"id"`
 		Level uint `json:"level"`
 	} `json:"starbase_modules"`
 	Ships map[string]struct {
-		ID              uint    `json:"id"`
-		HullID          uint    `json:"hull_id"`
+		Id              uint    `json:"id"`
+		HullId          uint    `json:"hull_id"`
 		MaxHP           float32 `json:"max_hp"`
 		MaxShieldHP     float32 `json:"max_shield_hp"`
 		Damage          float32 `json:"damage"`
@@ -63,8 +60,8 @@ type SyncJSON struct {
 		TotalAmount   float32 `json:"total_amount"`
 	} `json:"resource_producers"`
 	Defenses map[string]struct {
-		ID             uint   `json:"id"`
-		HullID         uint   `json:"hull_id"`
+		Id             uint   `json:"id"`
+		HullId         uint   `json:"hull_id"`
 		Damage         uint   `json:"damage"`
 		ShieldDamage   uint   `json:"shield_damage"`
 		LastUpdateTime string `json:"last_update_time"` // TODO: time.Time
@@ -72,29 +69,20 @@ type SyncJSON struct {
 	} `json:"defenses"`
 	VisitedSystems []bool `json:"visited_systems"`
 	MyShieldState  struct {
-		ID                    uint   `json:"id"`
+		Id                    uint   `json:"id"`
 		Target                uint   `json:"target"`
 		TriggeredOn           string `json:"triggered_on"` // TODO: time.Time
 		ExpiryTime            string `json:"expiry_time"`  // TODO: time.Time
-		PeaceShieldResourceID int    `json:"peace_shield_resource_id"`
+		PeaceShieldResourceId int    `json:"peace_shield_resource_id"`
 	} `json:"my_shield_state"`
 	UserHistory     map[string]bool `json:"user_history"`
 	FactionStanding map[string]struct {
 		Standing     uint `json:"standing"`
 		IsDiscovered bool `json:"is_discovered"`
 	} `json:"faction_standing"`
-	MySkillData         UnknownObject `json:"my_skill_data"`
-	BattleResultHeaders []UnknownType `json:"battle_result_headers"`
-	Fleets              map[string]struct {
-		ShipIDs             []uint             `json:"ship_ids"`
-		Name                string             `json:"name"`
-		DrydockID           uint               `json:"drydock_id"`
-		LastRecall          string             `json:"last_recall"` // TODO: time.Time
-		Officers            []uint             `json:"officers"`
-		Stats               map[string]float32 `json:"stats"`
-		RepairTime          uint               `json:"repair_time"`
-		RepairCost          UnknownObject      `json:"repair_cost"`
-		PrecalculatedRepair bool               `json:"precalculated_repair"`
-	} `json:"fleets"`
+	MySkillData         Unknown `json:"my_skill_data"`
+	BattleResultHeaders []Unknown `json:"battle_result_headers"`
+	Fleets              map[string]*FleetRaw  `json:"fleets"`
 	FulfilledConnectionRequirements []bool `json:"fulfilled_connection_requirements"`
 }
+

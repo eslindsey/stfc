@@ -18,8 +18,10 @@ import (
 
 type Header struct {Key, Value string}
 
+type Unknown interface{}
+
 const (
-	AppID        = "4af7c20b-7646-4fb7-b64f-ae0a8c51c1f1"
+	AppId        = "4af7c20b-7646-4fb7-b64f-ae0a8c51c1f1"
 	UnityVersion = "2020.3.18f1-digit-multiple-fixes-build"
 	UserAgent    = "UnityPlayer/" + UnityVersion + " (UnityWebRequest/1.0, libcurl/7.75.0-DEV)"
 	PrimeVersion = "1.000.31625"  // Past: 1.000.31437, 1.000.31110
@@ -43,24 +45,25 @@ type AdhocCredentials struct {
 }
 
 type Session struct {
-	LoginResponse *AccountsLogin
-	Sync2Response *SyncJSON
-	LiveHost      string
-	Alive         bool
-	galaxy        *Galaxy
+	LoginResponse    *AccountsLogin
+	Sync2Response    *SyncJSON
+	MyDeployedFleets MyDeployedFleets
+	LiveHost         string
+	Alive            bool
+	galaxy           *Galaxy
 }
 
 type AllianceRequest struct {
 	UserCurrentRank uint     `json:"user_current_rank"`
-	AllianceID      uint64   `json:"alliance_id"`
-	AllianceIDs     []uint64 `json:"alliance_ids"`
+	AllianceId      uint64   `json:"alliance_id"`
+	AllianceIds     []uint64 `json:"alliance_ids"`
 }
 
 /*
  * GENERAL FUNCTIONS
  */
 
-func ScopelyID(email, password string) (*AdhocCredentials, error) {
+func ScopelyId(email, password string) (*AdhocCredentials, error) {
 	return nil, ErrNotImplemented
 }
 
@@ -112,7 +115,7 @@ func Login(username, password string) (*Session, error) {
 	if ret.LoginResponse.HTTPCode != 200 {
 		return nil, ErrNoSuccess
 	}
-	ret.LiveHost = fmt.Sprintf("https://live-%03d-web.startrek.digitgaming.com", ret.LoginResponse.InstanceAccount.InstanceIDCurrent)
+	ret.LiveHost = fmt.Sprintf("https://live-%03d-web.startrek.digitgaming.com", ret.LoginResponse.InstanceAccount.InstanceIdCurrent)
 	go ret.keepalive()
 	return &ret, nil
 }
@@ -135,7 +138,7 @@ func (s *Session) Post(endpoint string, headers []Header, body io.Reader) ([]byt
 	req.Header.Set("User-Agent", UserAgent)
 	req.Header.Set("Accept-Encoding", "deflate")
 	req.Header.Set("X-Transaction-Id", randomTransactionId())
-	req.Header.Set("X-Auth-Session-Id", s.LoginResponse.InstanceSessionID)
+	req.Header.Set("X-Auth-Session-Id", s.LoginResponse.InstanceSessionId)
 	req.Header.Set("X-Prime-Version", PrimeVersion)
 	req.Header.Set("Content-Type", "application/x-protobuf")
 	req.Header.Set("X-Prime-Sync", "0")
@@ -200,7 +203,7 @@ func (s *Session) keepalive() {
 		time.Sleep(time.Minute)
 		_, err := s.Sync(1)   // TODO: Update state with received data
 		if err != nil {
-			log.Printf("Session %s keepalive failure: %s", s.LoginResponse.InstanceSessionID, err)
+			log.Printf("Session %s keepalive failure: %s", s.LoginResponse.InstanceSessionId, err)
 			s.Alive = false
 		}
 	}
