@@ -143,7 +143,7 @@ func testFleet(t *testing.T) {
 }
 
 func testDeployedFleet(t *testing.T) {
-	t.Logf("%6s  %19s  %9s  %4s  %4s  %6s  %9s  %4s  %5s  %7s  %7s  %7s", "", "Ship ID", "Hull ID", "HHP", "SHP", "Mining", "Destroyed", "Warp", "Speed", "Impulse", "Cargo", "PC")
+	t.Logf("%6s  %19s  %10s  %4s  %4s  %6s  %9s  %4s  %5s  %7s  %7s  %7s", "", "Ship ID", "Hull ID", "HHP", "SHP", "Mining", "Destroyed", "Warp", "Speed", "Impulse", "Cargo", "PC")
 	for _, dock := range AllDrydocks {
 		f, err := s.Fleet(dock)
 		if err != nil {
@@ -156,7 +156,7 @@ func testDeployedFleet(t *testing.T) {
 		id := strconv.FormatUint(df.ShipIds[0], 10)
 		hhp := (df.ShipHps[id] - df.ShipDmg[id]) / df.ShipHps[id] * 100
 		shp := (df.ShipShieldHps[id] - df.ShipShieldDmg[id]) / df.ShipShieldHps[id] * 100
-		t.Logf("%-6s  %19d  %9d  %3.0f%%  %3.0f%%  %-6t  %-9t  %4.0f  %5.2f  %7.0f  %7d  %7d", dock, df.ShipIds[0], df.HullIds[0], hhp, shp, df.IsMining, df.IsDestroyed, df.WarpDistance, df.WarpSpeed, df.ImpulseSpeed, df.FleetData.CargoMax, df.FleetData.SafeCargo)
+		t.Logf("%-6s  %19d  %10d  %3.0f%%  %3.0f%%  %-6t  %-9t  %4.0f  %5.2f  %7.0f  %7d  %7d", dock, df.ShipIds[0], df.HullIds[0], hhp, shp, df.IsMining, df.IsDestroyed, df.WarpDistance, df.WarpSpeed, df.ImpulseSpeed, df.FleetData.CargoMax, df.FleetData.SafeCargo)
 	}
 	t.Logf("DeployedFleet succeeded")
 }
