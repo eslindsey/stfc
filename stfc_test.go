@@ -9,6 +9,10 @@ import (
 	"github.com/go-yaml/yaml"
 )
 
+const (
+	Fyrsta = uint64(1549883102)
+)
+
 var secrets struct {
 	ScopelyIdEmail         string   `yaml:"scopelyid_email"`
 	ScopelyIdPassword      string   `yaml:"scopelyid_password"`
@@ -39,6 +43,7 @@ func TestAll(t *testing.T) {
 	t.Run("Fleet",         testFleet)
 	t.Run("DeployedFleet", testDeployedFleet)
 	//t.Run("WarpAtoSwarm",  testWarpAtoSwarm)
+	t.Run("DynamicNodes",  testDynamicNodes)
 	if len(secrets.ProfilesUserIds) > 0 {
 		t.Run("Profiles",       testProfiles)
 	}
@@ -162,7 +167,6 @@ func testDeployedFleet(t *testing.T) {
 }
 
 func testWarpAtoSwarm(t *testing.T) {
-	Fyrsta := uint64(1549883102)
 	f, err := s.Fleet(ShipA)
 	x, y := RandomCoords()
 	err = f.WarpTo(Fyrsta, x, y, false)
@@ -170,5 +174,17 @@ func testWarpAtoSwarm(t *testing.T) {
 		t.Fatalf("WarpAtoSwarm failed: %s", err)
 	}
 	t.Logf("WarpAtoSwarm succeeded")
+}
+
+func testDynamicNodes(t *testing.T) {
+	dn, err := s.GameWorldSystemDynamicNodes(Fyrsta)
+	if err != nil {
+		t.Fatalf("DynamicNodes failed: %s", err)
+	}
+	types := map[uint]int{}
+	for _, fleet := range dn.DeployedFleets {
+		types[fleet.Type]++
+	}
+	t.Logf("DynamicNodes succeeded, found %d hostiles and %d players", types[1], types[2])
 }
 

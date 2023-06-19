@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package stfc;
+
+option go_package = "github.com/eslindsey/stfc";
+
+message Generic {
+	message Payload {
+		uint32 type = 1;  // 42 for JSON
+		string data = 2;
+	}
+	repeated Payload payload = 1;
+	string version = 5;
+}
+

@@ -30,7 +30,6 @@ const (
 var (
 	ErrNoSuccess          = errors.New("non-200 response code")
 	ErrNilArgument        = errors.New("nil argument")
-	ErrTypeNotFound       = errors.New("requested type not found")
 	ErrNotImplemented     = errors.New("not implemented")
 	ErrEmptyResponse      = errors.New("empty response")
 	ErrSyncMissingPayload = errors.New("sync missing JSON payload")
