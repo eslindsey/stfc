@@ -10,9 +10,10 @@ import (
 	"gonum.org/v1/gonum/graph/path"
 )
 
-const (
-	SystemRadius = 1100.0
-)
+// SystemRadius is the radius of the game playfield. When setting system
+// coordinates, the x, y values should fall within the circle described by
+// this radius.
+const SystemRadius = 1100.0
 
 var (
 	ErrLengthMismatch = errors.New("length mismatch")
@@ -182,13 +183,16 @@ func (soa ShortestOptionsArray) Gather() *ShortestOptions {
  * UTILITY FUNCTIONS
  */
 
-// NOT guaranteed to be within the game's playing field: limit yourself to 1100 radius!
+// TranslateCoords maths polar coordinates (degrees of angle, and radius) into
+// rectangular coordinates (x, y). This function does NOT guarantee that the
+// values you pass are within the game's playfield. See [SystemRadius].
 func TranslateCoords(degrees, radius float64) (float64, float64) {
 	theta := math.Pi / 180.0
 	return radius * math.Cos(theta), radius * math.Sin(theta)
 }
 
-// Guaranteed to be within the game's playing field
+// RandomCoords returns a set of x, y coordinates that is guaranteed to be
+// within the game playfield area.
 func RandomCoords() (x, y float64) {
 	r := rand.Float64() * SystemRadius
 	d := rand.Float64() * 360.0
