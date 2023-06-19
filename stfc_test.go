@@ -11,6 +11,7 @@ import (
 
 const (
 	Fyrsta = uint64(1549883102)
+	Talvath = uint64(1753923484)
 )
 
 var secrets struct {
