@@ -33,9 +33,18 @@ var (
 	ErrNotImplemented     = errors.New("not implemented")
 	ErrEmptyResponse      = errors.New("empty response")
 	ErrSyncMissingPayload = errors.New("sync missing JSON payload")
+
+	ShipsLoca   Loca
+	ShipsStatic []*StaticShip
+	ShipsById   = map[uint]*StaticShip{}
 )
 
 func init() {
+	LocaFromFile("static/en/ships.json", &ShipsLoca)
+	jsonFromFile("static/ship.json",     &ShipsStatic)
+	for i, ship := range ShipsStatic {
+		ShipsById[ship.Id] = ShipsStatic[i]
+	}
 }
 
 type AdhocCredentials struct {
@@ -47,6 +56,7 @@ type Session struct {
 	LoginResponse    *AccountsLogin
 	Sync2Response    *SyncJSON
 	MyDeployedFleets MyDeployedFleets
+
 	LiveHost         string
 	Alive            bool
 	galaxy           *Galaxy
@@ -248,5 +258,17 @@ func randomTransactionId() string {
 		rand.Intn(0xffff),
 		rand.Intn(0xffffffffffff),
 	)
+}
+
+func jsonFromFile(file string, val interface{}) error {
+	b, err := ioutil.ReadFile(file)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(b, val)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 

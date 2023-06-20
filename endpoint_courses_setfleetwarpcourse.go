@@ -3,6 +3,7 @@ package stfc
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 )
 
 type CoursesSetFleetWarpCourseRequest struct {
@@ -35,6 +36,11 @@ func (s *Session) CoursesSetFleetWarpCourse(request *CoursesSetFleetWarpCourseRe
 		return nil, err
 	}
 	// Decode proto & JSON, return
+	max := 1000
+	if max > len(body) {
+		max = len(body)
+	}
+	fmt.Println(string(body[:max]))
 	var response CoursesSetFleetWarpCourseResponse
 	if err := getMessage1JSON(body, &response); err != nil {
 		return nil, err

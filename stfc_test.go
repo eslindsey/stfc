@@ -1,6 +1,7 @@
 package stfc
 
 import (
+	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"strconv"
@@ -134,6 +135,7 @@ func testAlliancesJson(t *testing.T) {
 }
 
 func testFleet(t *testing.T) {
+	t.Logf("%6s  %-19s  %-8s  %11s  %s", "", "Ship ID", "Status", "Hull ID", "Ship")
 	for _, dock := range AllDrydocks {
 		f, err := s.Fleet(dock)
 		if err != nil {
@@ -143,13 +145,29 @@ func testFleet(t *testing.T) {
 		if _, ok := s.MyDeployedFleets[f.StringId]; ok {
 			status = "deployed"
 		}
-		t.Logf("ID for %s is %d (%s)", dock, f.Id, status)
+		hid := uint(0)
+		ship := "Unknown Ship"
+		if s, ok := s.Sync2Response.Ships[fmt.Sprintf("%d", f.ShipIds[0])]; ok {
+			hid = s.HullId
+			if static, ok := ShipsById[hid]; ok {
+				if l, ok := ShipsLoca[fmt.Sprintf("%d_ship_name_%d", hid, static.LocaId)]; ok {
+					ship = l
+				} else {
+					t.Logf("Couldn't find entry in ShipsLoca")
+				}
+			} else {
+				t.Logf("Couldn't find entry in ShipsById")
+			}
+		} else {
+			t.Logf("Couldn't find entry in Ships")
+		}
+		t.Logf("%6s  %19d  %-8s  %11d  %s", dock, f.Id, status, hid, ship)
 	}
 	t.Logf("Fleet succeeded")
 }
 
 func testDeployedFleet(t *testing.T) {
-	t.Logf("%6s  %19s  %10s  %4s  %4s  %6s  %9s  %4s  %5s  %7s  %7s  %7s", "", "Ship ID", "Hull ID", "HHP", "SHP", "Mining", "Destroyed", "Warp", "Speed", "Impulse", "Cargo", "PC")
+	t.Logf("%6s  %19s  %11s  %4s  %4s  %6s  %9s  %4s  %5s  %7s  %7s  %7s", "", "Ship ID", "Hull ID", "HHP", "SHP", "Mining", "Destroyed", "Warp", "Speed", "Impulse", "Cargo", "PC")
 	for _, dock := range AllDrydocks {
 		f, err := s.Fleet(dock)
 		if err != nil {
@@ -160,9 +178,12 @@ func testDeployedFleet(t *testing.T) {
 			continue
 		}
 		id := strconv.FormatUint(df.ShipIds[0], 10)
+		if l, ok := ShipsLoca[id + "_ship_name_0"]; ok {
+			id = l
+		}
 		hhp := (df.ShipHps[id] - df.ShipDmg[id]) / df.ShipHps[id] * 100
 		shp := (df.ShipShieldHps[id] - df.ShipShieldDmg[id]) / df.ShipShieldHps[id] * 100
-		t.Logf("%-6s  %19d  %10d  %3.0f%%  %3.0f%%  %-6t  %-9t  %4.0f  %5.2f  %7.0f  %7d  %7d", dock, df.ShipIds[0], df.HullIds[0], hhp, shp, df.IsMining, df.IsDestroyed, df.WarpDistance, df.WarpSpeed, df.ImpulseSpeed, df.FleetData.CargoMax, df.FleetData.SafeCargo)
+		t.Logf("%-6s  %19d  %11d  %3.0f%%  %3.0f%%  %-6t  %-9t  %4.0f  %5.2f  %7.0f  %7d  %7d", dock, df.ShipIds[0], df.HullIds[0], hhp, shp, df.IsMining, df.IsDestroyed, df.WarpDistance, df.WarpSpeed, df.ImpulseSpeed, df.FleetData.CargoMax, df.FleetData.SafeCargo)
 	}
 	t.Logf("DeployedFleet succeeded")
 }

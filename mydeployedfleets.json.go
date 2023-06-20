@@ -15,7 +15,7 @@ type DeployedFleet struct {
 	IsActive                             bool                          `json:"is_active"`
 	ShipIds                              []uint64                      `json:"ship_ids"`
 	HullIds                              []uint                        `json:"hull_ids"`
-	WarpTime                             ScopelyTime                   `json:"warp_time"`
+	WarpTime                             *ScopelyTime                  `json:"warp_time"`
 	WarpData                             []Unknown                     `json:"warp_data"` // looks like 0=warp_path, 1=target_x, 2=target_y, 3=warp_cost, 4=target_action, 5=is_instant_warp ?
 	LatestCourseVectorX                  *float64                      `json:"latest_course_vector_x"`
 	LatestCourseVectorY                  *float64                      `json:"latest_course_vector_y"`
