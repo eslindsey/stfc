@@ -24,7 +24,7 @@ const (
 	AppId        = "4af7c20b-7646-4fb7-b64f-ae0a8c51c1f1"
 	UnityVersion = "2020.3.18f1-digit-multiple-fixes-build"
 	UserAgent    = "UnityPlayer/" + UnityVersion + " (UnityWebRequest/1.0, libcurl/7.75.0-DEV)"
-	PrimeVersion = "1.000.31625"  // Past: 1.000.31437, 1.000.31110
+	PrimeVersion = "1.000.31716"  // Past: 1.000.31625, 1.000.31437, 1.000.31110
 )
 
 var (
